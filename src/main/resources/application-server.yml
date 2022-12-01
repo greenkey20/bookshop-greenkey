@@ -1,0 +1,14 @@
+# server 환경에서 사용하는 정보들 설정
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  datesource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    password: mysql
+    url: jdbc:mysql://localhost:3306/db_bookshop
+    username: bookshop

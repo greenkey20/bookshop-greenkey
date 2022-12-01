@@ -1,0 +1,93 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '2.7.6'
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+//    id 'org.asciidoctor.convert' version '1.5.8' // 2022.12.1(목) 2h45 Spring Intializr에서 "Spring REST Docs"라는 dependency 검색/추가해서 프로젝트 파일 생성 시 자동 추가된 PLUGIN
+    id "org.asciidoctor.jvm.convert" version "3.3.2"
+}
+
+group = 'com.greenkey20'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    set('snippetsDir', file("build/generated-snippets"))
+}
+
+configurations {
+    asciidoctorExtensions // 2022.12.1(목) 4h section3 unit9 be-solution-build 참고해서 수정/추가
+}
+
+dependencies {
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // API-service 계층 mapper - Spring Initializr에 없음
+    implementation 'org.mapstruct:mapstruct:1.5.1.Final'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.1.Final'
+
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'com.h2database:h2'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    implementation 'com.google.code.gson:gson' // API 계층 슬라이스 테스트 - Spring Initializr에 없음
+
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    asciidoctorExtensions 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+    // 2022.12.1(목) 2h45 Spring Intializr에서 "Spring REST Docs"라는 dependency 검색/추가해서 프로젝트 파일 생성했는데, 이 dependency는 포함되어있지 않았음
+
+    /*
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.security:spring-security-test'
+    // 나의 질문 = 이건 부트캠프 학습 프로젝트에서는 못 본 것 같은데, Spring Intializr에서 "Spring Security" dependency 추가해서 포함된 것인가?
+
+    // JWT 기능을 위한 jjwt 라이브러리 - Spring Initializr에 없음
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+     */
+}
+
+tasks.named('test') {
+    outputs.dir snippetsDir
+    useJUnitPlatform()
+}
+
+tasks.named('asciidoctor') {
+    configurations "asciidoctorExtensions"
+    inputs.dir snippetsDir
+    dependsOn test
+}
+
+// 이하 API 문서 생성을 위한 설정 추가 = 2022.12.1(목) 4h20 학습 자료 참고해서 내가 작성
+task copyDocument(type: Copy) {
+    dependsOn asciidoctor
+    println "asciidoctor output: ${asciidoctor.outputDir}"
+    from file("${asciidoctor.outputDir}")
+    into file("src/main/resources/static/docs")
+}
+
+build {
+    dependsOn copyDocument
+}
+
+bootJar {
+    dependsOn copyDocument
+    from("${asciidoctor.outputDir}") {
+        into 'src/main/resources/static/docs'
+    }
+}
