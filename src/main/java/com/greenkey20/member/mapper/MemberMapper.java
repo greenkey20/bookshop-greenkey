@@ -6,4 +6,5 @@ import org.mapstruct.ReportingPolicy;
 // 2022.12.1(목) 6h5
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface MemberMapper {
+
 }
